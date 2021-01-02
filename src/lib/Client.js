@@ -85,6 +85,7 @@ class Client {
         'fejlec', [
           [ 'szamlaszam', options.invoiceId ],
           [ 'keltDatum', new Date() ],
+          [ 'teljesitesDatum', new Date() ],
       ]) +
       '</xmlszamlast>'
 
