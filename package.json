@@ -23,6 +23,8 @@
     "esnextguardian": "^1.2.1",
     "libxmljs2": "^0.21.6",
     "merge": "^1.2.0",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.33",
     "request": "^2.73.0",
     "xml2js": "^0.4.16"
   }
