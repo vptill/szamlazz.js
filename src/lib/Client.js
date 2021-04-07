@@ -86,8 +86,8 @@ class Client {
       ]) +
       XMLUtils.wrapWithElement("fejlec", [
         ["szamlaszam", options.invoiceId],
-        ["keltDatum", new Date(moment.tz(new Date(), "Europe/Budapest").toDate())],
-        ["teljesitesDatum", new Date(moment.tz(new Date(), "Europe/Budapest").toDate())],
+        ["keltDatum", new Date(moment.tz(moment(), 'Europe/Budapest').format("YYYY-MM-DD HH:mm:ss"))],
+        ["teljesitesDatum", new Date(moment.tz(moment(), 'Europe/Budapest').format("YYYY-MM-DD HH:mm:ss"))],
       ]) +
       "</xmlszamlast>";
 
