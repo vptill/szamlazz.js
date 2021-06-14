@@ -119,7 +119,7 @@ describe('Client', () => {
               szlahu_nettovegosszeg: '5201',
               szlahu_szamlaszam: '2016-139'
             },
-            data
+            data: Buffer.from(data).toString('utf8')
           })))
 
           client.setRequestInvoiceDownload(false)
@@ -166,7 +166,7 @@ describe('Client', () => {
               szlahu_nettovegosszeg: '5201',
               szlahu_szamlaszam: '2016-139'
             },
-            data
+            data: Buffer.from(data).toString('utf8')
           })))
 
           client.setRequestInvoiceDownload(true)
@@ -203,6 +203,33 @@ describe('Client', () => {
       it('should have `pdf` property', async () => {
         const httpResponse = await client.issueInvoice(invoice)
         expect(httpResponse.pdf).to.be.an.instanceof(Buffer)
+      })
+    })
+  })
+
+  describe('getInvoiceData', () => {
+    describe('unsuccessful invoice generation', () => {
+      beforeEach(done => {
+        fs.readFile(path.join(__dirname, 'resources', 'unknown_invoice_number.xml'), (e, data) => {
+          axiosStub.resolves(new Promise(r => r({
+            status: 200,
+            headers: {},
+            data: Buffer.from(data).toString('utf8')
+          })))
+
+          client.setRequestInvoiceDownload(true)
+          done()
+        })
+      })
+
+      it('should throw error', async () => {
+        try {
+          const res = await client.getInvoiceData({
+            invoiceId: 'TEST-ISSUE-NUMBER'
+          })
+        } catch (e) {
+          expect(e.message).to.be.string('Hiányzó adat: számla agent xml lekérés hiba (ismeretlen számlaszám).')
+        }
       })
     })
   })

@@ -43,30 +43,26 @@ class Client {
     assert(hasInvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
 
     try {
-      const httpResponse = await this._sendRequest(
+      const parsedBody = await this._sendRequest(
         'action-szamla_agent_xml',
         this._generateInvoiceDataXML(options)
       )
 
-      const body = httpResponse.data
-
-      let result
-      try {
-        const parsedBody = await XMLUtils.parseString(body)
-        result = parsedBody.szamla
-      } catch (e) {
-        throw new Error(e.message)
-      }
-      return result
+      return parsedBody.szamla
     } catch (e) {
       throw e
     }
   }
 
-  async handlePdfByResponseVersion(body) {
-    if (this._options.responseVersion === 2) {
+  async parsePdfFieldFromBody(body) {
+    if (this._options.requestInvoiceDownload) {
       const parsed = await XMLUtils.xml2obj(body, { 'xmlszamlavalasz.pdf': 'pdf' })
-      return new Buffer(parsed.pdf, 'base64')
+
+      if (this._options.responseVersion === 2) {
+        return new Buffer(parsed.pdf, 'base64')
+      } else {
+        return new Buffer(parsed.pdf)
+      }
     }
 
     return body
@@ -117,7 +113,7 @@ class Client {
       }
 
       if (this._options.requestInvoiceDownload) {
-        data.pdf = await this.handlePdfByResponseVersion(httpResponse.data)
+        data.pdf = await this.parsePdfFieldFromBody(httpResponse.data)
       }
 
       return data
@@ -210,6 +206,22 @@ class Client {
         const err = new Error(decodeURIComponent(httpResponse.headers.szlahu_error.replace(/\+/g, ' ')))
         err.code = httpResponse.headers.szlahu_error_code
         throw err
+      }
+
+      let parsedBody
+      try {
+        parsedBody = await XMLUtils.parseString(httpResponse.data)
+      } catch (e) {
+        throw new Error(e.message)
+      }
+
+      if (
+        parsedBody.xmlszamlavalasz &&
+        parsedBody.xmlszamlavalasz.hibakod
+      ) {
+        const error = new Error(parsedBody.xmlszamlavalasz.hibauzenet)
+        error.code = parsedBody.xmlszamlavalasz.hibakod[0]
+        throw error
       }
 
       return httpResponse
