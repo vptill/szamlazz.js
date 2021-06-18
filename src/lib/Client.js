@@ -5,6 +5,10 @@ const merge = require('merge')
 const axios = require('axios')
 const FormData = require('form-data')
 const XMLUtils = require('./XMLUtils')
+const axiosCookieJarSupport = require('axios-cookiejar-support').default
+const tough = require('tough-cookie')
+
+axiosCookieJarSupport(axios)
 
 const xmlHeader =
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -35,6 +39,8 @@ class Client {
       assert(typeof this._options.password === 'string' && this._options.password.trim().length > 1,
       'Valid Password field missing form client options')
     }
+
+    this._cookieJar = new tough.CookieJar()
   }
 
   async getInvoiceData (options) {
@@ -195,7 +201,8 @@ class Client {
         headers: {
           ...formData.getHeaders()
         },
-        ...requestConfig
+        ...requestConfig,
+        jar: this._cookieJar
       })
 
       if (httpResponse.status !== 200) {
