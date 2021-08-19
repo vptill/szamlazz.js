@@ -85,6 +85,8 @@ exports.setup = function (_module) {
     PayOp: new PaymentMethod("PayOp", "PayOp"),
     SimplePay: new PaymentMethod("SimplePay", "SimplePay"),
     Borgun: new PaymentMethod("Borgun", "Borgun"),
+    PayPal1: new PaymentMethod("PayPal1", "PayPal1"),
+    Stripe1: new PaymentMethod("Stripe1", "Stripe1"),
   };
 
   _module.Interface = { Currency, Language, PaymentMethod };
