@@ -60,20 +60,6 @@ class Client {
     }
   }
 
-  async parsePdfFieldFromBody(body) {
-    if (this._options.requestInvoiceDownload) {
-      const parsed = await XMLUtils.xml2obj(body, { 'xmlszamlavalasz.pdf': 'pdf' })
-
-      if (this._options.responseVersion === 2) {
-        return new Buffer(parsed.pdf, 'base64')
-      } else {
-        return new Buffer(parsed.pdf)
-      }
-    }
-
-    return body
-  }
-
   async reverseInvoice (options) {
     assert(typeof options.invoiceId === 'string' && options.invoiceId.trim().length > 1, 'invoiceId must be specified')
     assert(options.eInvoice !== undefined, 'eInvoice must be specified')
@@ -83,10 +69,7 @@ class Client {
       const httpResponse = await this._sendRequest(
         'action-szamla_agent_st',
         this._generateReverseInvoiceXML(options),
-        {
-          responseType: 'arraybuffer',
-          responseEncoding: 'binary'
-        }
+        true
       )
 
       let data = {
@@ -109,7 +92,8 @@ class Client {
     try {
       const httpResponse = await this._sendRequest(
         'action-xmlagentxmlfile',
-        this._generateInvoiceXML(invoice)
+        this._generateInvoiceXML(invoice),
+        this._options.requestInvoiceDownload && this._options.responseVersion === 1
       )
 
       const data = {
@@ -119,9 +103,13 @@ class Client {
       }
 
       if (this._options.requestInvoiceDownload) {
-        data.pdf = await this.parsePdfFieldFromBody(httpResponse.data)
+        if (this._options.responseVersion === 1) {
+          data.pdf = new Buffer(httpResponse.data)
+        } else if (this._options.responseVersion === 2) {
+          const parsed = await XMLUtils.xml2obj(httpResponse.data, { 'xmlszamlavalasz.pdf': 'pdf' })
+          data.pdf = new Buffer(parsed.pdf, 'base64')
+        }
       }
-
       return data
     } catch (e) {
       throw e
@@ -192,19 +180,24 @@ class Client {
       '</xmlszamlaxml>'
   }
 
-  async _sendRequest (fileFieldName, data, requestConfig) {
+  async _sendRequest (fileFieldName, data, isBinaryDownload) {
     const formData = new FormData()
     formData.append(fileFieldName, data, 'request.xml')
 
     try {
-      const httpResponse = await axios.post(szamlazzURL, formData.getBuffer(), {
+      const axiosOptions = {
         headers: {
           ...formData.getHeaders()
         },
-        ...requestConfig,
-        jar: this._cookieJar
-      })
+        jar: this._cookieJar,
+      }
 
+      if (isBinaryDownload) {
+        axiosOptions.responseType = 'arraybuffer'
+        axiosOptions.reponseEncoding = 'binary'
+      }
+
+      const httpResponse = await axios.post(szamlazzURL, formData.getBuffer(), axiosOptions)
       if (httpResponse.status !== 200) {
         throw new Error(`${httpResponse.status} ${httpResponse.statusText}`)
       }
@@ -213,6 +206,10 @@ class Client {
         const err = new Error(decodeURIComponent(httpResponse.headers.szlahu_error.replace(/\+/g, ' ')))
         err.code = httpResponse.headers.szlahu_error_code
         throw err
+      }
+
+      if (isBinaryDownload) {
+          return httpResponse
       }
 
       let parsedBody
