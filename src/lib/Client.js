@@ -48,16 +48,12 @@ class Client {
     const hasOrderNumber = typeof options.orderNumber === 'string' && options.orderNumber.trim().length > 1
     assert(hasInvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
 
-    try {
-      const parsedBody = await this._sendRequest(
-        'action-szamla_agent_xml',
-        this._generateInvoiceDataXML(options)
-      )
+    const parsedBody = await this._sendRequest(
+      'action-szamla_agent_xml',
+      this._generateInvoiceDataXML(options)
+    )
 
-      return parsedBody.szamla
-    } catch (e) {
-      throw e
-    }
+    return parsedBody.szamla
   }
 
   async reverseInvoice (options) {
@@ -65,55 +61,47 @@ class Client {
     assert(options.eInvoice !== undefined, 'eInvoice must be specified')
     assert(options.requestInvoiceDownload !== undefined, 'requestInvoiceDownload must be specified')
 
-    try {
-      const httpResponse = await this._sendRequest(
-        'action-szamla_agent_st',
-        this._generateReverseInvoiceXML(options),
-        true
-      )
+    const httpResponse = await this._sendRequest(
+      'action-szamla_agent_st',
+      this._generateReverseInvoiceXML(options),
+      true
+    )
 
-      let data = {
-        invoiceId: httpResponse.headers.szlahu_szamlaszam,
-        netTotal: httpResponse.headers.szlahu_nettovegosszeg,
-        grossTotal: httpResponse.headers.szlahu_bruttovegosszeg
-      }
-
-      if (options.requestInvoiceDownload) {
-        data.pdf = httpResponse.data
-      }
-
-      return data
-    } catch (e) {
-      throw e
+    let data = {
+      invoiceId: httpResponse.headers.szlahu_szamlaszam,
+      netTotal: httpResponse.headers.szlahu_nettovegosszeg,
+      grossTotal: httpResponse.headers.szlahu_bruttovegosszeg
     }
+
+    if (options.requestInvoiceDownload) {
+      data.pdf = httpResponse.data
+    }
+
+    return data
   }
 
   async issueInvoice (invoice) {
-    try {
-      const httpResponse = await this._sendRequest(
-        'action-xmlagentxmlfile',
-        this._generateInvoiceXML(invoice),
-        this._options.requestInvoiceDownload && this._options.responseVersion === 1
-      )
+    const httpResponse = await this._sendRequest(
+      'action-xmlagentxmlfile',
+      this._generateInvoiceXML(invoice),
+      this._options.requestInvoiceDownload && this._options.responseVersion === 1
+    )
 
-      const data = {
-        invoiceId: httpResponse.headers.szlahu_szamlaszam,
-        netTotal: httpResponse.headers.szlahu_nettovegosszeg,
-        grossTotal: httpResponse.headers.szlahu_bruttovegosszeg,
-      }
-
-      if (this._options.requestInvoiceDownload) {
-        if (this._options.responseVersion === 1) {
-          data.pdf = new Buffer(httpResponse.data)
-        } else if (this._options.responseVersion === 2) {
-          const parsed = await XMLUtils.xml2obj(httpResponse.data, { 'xmlszamlavalasz.pdf': 'pdf' })
-          data.pdf = new Buffer(parsed.pdf, 'base64')
-        }
-      }
-      return data
-    } catch (e) {
-      throw e
+    const data = {
+      invoiceId: httpResponse.headers.szlahu_szamlaszam,
+      netTotal: httpResponse.headers.szlahu_nettovegosszeg,
+      grossTotal: httpResponse.headers.szlahu_bruttovegosszeg,
     }
+
+    if (this._options.requestInvoiceDownload) {
+      if (this._options.responseVersion === 1) {
+        data.pdf = new Buffer(httpResponse.data)
+      } else if (this._options.responseVersion === 2) {
+        const parsed = await XMLUtils.xml2obj(httpResponse.data, { 'xmlszamlavalasz.pdf': 'pdf' })
+        data.pdf = new Buffer(parsed.pdf, 'base64')
+      }
+    }
+    return data
   }
 
   setRequestInvoiceDownload (value) {
@@ -184,54 +172,42 @@ class Client {
     const formData = new FormData()
     formData.append(fileFieldName, data, 'request.xml')
 
-    try {
-      const axiosOptions = {
-        headers: {
-          ...formData.getHeaders()
-        },
-        jar: this._cookieJar,
-      }
-
-      if (isBinaryDownload) {
-        axiosOptions.responseType = 'arraybuffer'
-        axiosOptions.reponseEncoding = 'binary'
-      }
-
-      const httpResponse = await axios.post(szamlazzURL, formData.getBuffer(), axiosOptions)
-      if (httpResponse.status !== 200) {
-        throw new Error(`${httpResponse.status} ${httpResponse.statusText}`)
-      }
-
-      if (httpResponse.headers.szlahu_error_code) {
-        const err = new Error(decodeURIComponent(httpResponse.headers.szlahu_error.replace(/\+/g, ' ')))
-        err.code = httpResponse.headers.szlahu_error_code
-        throw err
-      }
-
-      if (isBinaryDownload) {
-          return httpResponse
-      }
-
-      let parsedBody
-      try {
-        parsedBody = await XMLUtils.parseString(httpResponse.data)
-      } catch (e) {
-        throw new Error(e.message)
-      }
-
-      if (
-        parsedBody.xmlszamlavalasz &&
-        parsedBody.xmlszamlavalasz.hibakod
-      ) {
-        const error = new Error(parsedBody.xmlszamlavalasz.hibauzenet)
-        error.code = parsedBody.xmlszamlavalasz.hibakod[0]
-        throw error
-      }
-
-      return httpResponse
-    } catch (e) {
-      throw e
+    const axiosOptions = {
+      headers: {
+        ...formData.getHeaders()
+      },
+      jar: this._cookieJar,
     }
+
+    if (isBinaryDownload) {
+      axiosOptions.responseType = 'arraybuffer'
+      axiosOptions.reponseEncoding = 'binary'
+    }
+
+    const httpResponse = await axios.post(szamlazzURL, formData.getBuffer(), axiosOptions)
+    if (httpResponse.status !== 200) {
+      throw new Error(`${httpResponse.status} ${httpResponse.statusText}`)
+    }
+
+    if (httpResponse.headers.szlahu_error_code) {
+      const err = new Error(decodeURIComponent(httpResponse.headers.szlahu_error.replace(/\+/g, ' ')))
+      err.code = httpResponse.headers.szlahu_error_code
+      throw err
+    }
+
+    if (isBinaryDownload) {
+      return httpResponse
+    }
+
+    const parsedBody = await XMLUtils.parseString(httpResponse.data)
+
+    if (parsedBody.xmlszamlavalasz && parsedBody.xmlszamlavalasz.hibakod) {
+      const error = new Error(parsedBody.xmlszamlavalasz.hibauzenet)
+      error.code = parsedBody.xmlszamlavalasz.hibakod[0]
+      throw error
+    }
+
+    return httpResponse
   }
 }
 

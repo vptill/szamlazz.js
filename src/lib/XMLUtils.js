@@ -79,33 +79,29 @@ const parseString = (xml) => {
 exports.parseString = parseString
 
 const xml2obj = async (xml, objList) => {
-  try {
-    const res = await parseString(xml)
-    const hash = {}
-    Object.keys(objList).forEach(keyPath => {
-      const path = keyPath.split('.')
+  const res = await parseString(xml)
+  const hash = {}
+  Object.keys(objList).forEach(keyPath => {
+    const path = keyPath.split('.')
 
-      let found = true
-      let p = res
+    let found = true
+    let p = res
 
-      for (let i = 0; i < path.length; i++) {
-        if (p.hasOwnProperty(path[ i ])) {
-          console.log('>>', path[ i ])
-          p = p[ path[ i ] ]
-        } else {
-          found = false
-          break
-        }
+    for (let i = 0; i < path.length; i++) {
+      if (p.hasOwnProperty(path[ i ])) {
+        console.log('>>', path[ i ])
+        p = p[ path[ i ] ]
+      } else {
+        found = false
+        break
       }
+    }
 
-      if (found) {
-        hash[ objList[ keyPath ] ] = p[ 0 ]
-      }
-    })
+    if (found) {
+      hash[ objList[ keyPath ] ] = p[ 0 ]
+    }
+  })
 
-    return hash
-  } catch (e) {
-    throw e
-  }
+  return hash
 }
 exports.xml2obj = xml2obj

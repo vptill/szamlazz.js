@@ -122,22 +122,17 @@ let invoice = new szamlazz.Invoice({
   seller: seller, // the seller, required
   buyer: buyer, // the buyer, required
   items: [ soldItem1, soldItem2 ], // the sold items, required
-  prepaymentInvoice: false // prepayment/deposit invoice should be issued, optional, default: false 
+  prepaymentInvoice: false // prepayment/deposit invoice should be issued, optional, default: false
 })
 ```
 
 To issue the invoice with szamlazz.hu:
 
 ```javascript
-try {
-  const result = await szamlazzClient.issueInvoice(invoice)
-  if (result.pdf) {
-    // a Buffer with the pdf data is available if requestInvoiceDownload === true
-  }
-} catch (e) {
-  // Handle error
+const result = await szamlazzClient.issueInvoice(invoice)
+if (result.pdf) {
+  // a Buffer with the pdf data is available if requestInvoiceDownload === true
 }
-
 ```
 
 ### Get invoice data
