@@ -67,7 +67,7 @@ class Client {
       true
     )
 
-    let data = {
+    const data = {
       invoiceId: httpResponse.headers.szlahu_szamlaszam,
       netTotal: httpResponse.headers.szlahu_nettovegosszeg,
       grossTotal: httpResponse.headers.szlahu_bruttovegosszeg
