@@ -2,9 +2,13 @@
 
 const assert = require('assert')
 const merge = require('merge')
-const request = require('request')
-const xml2js = require('xml2js')
+const axios = require('axios')
+const FormData = require('form-data')
 const XMLUtils = require('./XMLUtils')
+const axiosCookieJarSupport = require('axios-cookiejar-support').default
+const tough = require('tough-cookie')
+
+axiosCookieJarSupport(axios)
 
 const xmlHeader =
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -36,93 +40,80 @@ class Client {
       'Valid Password field missing form client options')
     }
 
-    this._cookieJar = request.jar()
+    this._cookieJar = new tough.CookieJar()
   }
 
-  getInvoiceData (options, cb) {
-    const hasinvoiceId = typeof options.invoiceId === 'string' && options.invoiceId.trim().length > 1
+  async getInvoiceData (options) {
+    const hasInvoiceId = typeof options.invoiceId === 'string' && options.invoiceId.trim().length > 1
     const hasOrderNumber = typeof options.orderNumber === 'string' && options.orderNumber.trim().length > 1
-    assert(hasinvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
+    assert(hasInvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
 
-    const xml =
-      '<?xml version="1.0" encoding="UTF-8"?>\n\
-      <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml http://www.szamlazz.hu/docs/xsds/agentpdf/xmlszamlaxml.xsd">\n' +
-      XMLUtils.wrapWithElement([
-        ...this._getAuthFields(),
-        [ 'szamlaszam', options.invoiceId ],
-        [ 'rendelesSzam', options.orderNumber ],
-        [ 'pdf', options.pdf ]
-      ]) +
-      '</xmlszamlaxml>'
+    try {
+      const parsedBody = await this._sendRequest(
+        'action-szamla_agent_xml',
+        this._generateInvoiceDataXML(options)
+      )
 
-    this._sendRequest(
-      'action-szamla_agent_xml',
-      xml,
-      'utf8',
-      (httpResponse, cb) => {
-        xml2js.parseString(httpResponse.body, (e, res) => {
-          cb(e, res.szamla)
-        })
-      },
-      cb)
+      return parsedBody.szamla
+    } catch (e) {
+      throw e
+    }
   }
 
-  reverseInvoice (options, cb) {
+  async reverseInvoice (options) {
     assert(typeof options.invoiceId === 'string' && options.invoiceId.trim().length > 1, 'invoiceId must be specified')
     assert(options.eInvoice !== undefined, 'eInvoice must be specified')
     assert(options.requestInvoiceDownload !== undefined, 'requestInvoiceDownload must be specified')
 
-    const xml =
-      '<?xml version="1.0" encoding="UTF-8"?>\n\
-      <xmlszamlast xmlns="http://www.szamlazz.hu/xmlszamlast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlast https://www.szamlazz.hu/szamla/docs/xsds/agentst/xmlszamlast.xsd">\n' +
-      XMLUtils.wrapWithElement(
-        'beallitasok', [
-          ...this._getAuthFields(),
-          [ 'eszamla', String(options.eInvoice) ],
-          [ 'szamlaLetoltes', String(options.requestInvoiceDownload) ],
-      ]) +
-      XMLUtils.wrapWithElement(
-        'fejlec', [
-          [ 'szamlaszam', options.invoiceId ],
-          [ 'keltDatum', new Date() ],
-      ]) +
-      '</xmlszamlast>'
+    try {
+      const httpResponse = await this._sendRequest(
+        'action-szamla_agent_st',
+        this._generateReverseInvoiceXML(options),
+        true
+      )
 
-    this._sendRequest(
-      'action-szamla_agent_st',
-      xml,
-      'utf8',
-      (httpResponse, cb) => {
-        let pdf = null
-        const contentType = httpResponse.headers['content-type']
+      let data = {
+        invoiceId: httpResponse.headers.szlahu_szamlaszam,
+        netTotal: httpResponse.headers.szlahu_nettovegosszeg,
+        grossTotal: httpResponse.headers.szlahu_bruttovegosszeg
+      }
 
-        if (contentType && contentType.indexOf('application/pdf') === 0) {
-          pdf = httpResponse.body
-        }
+      if (options.requestInvoiceDownload) {
+        data.pdf = httpResponse.data
+      }
 
-        cb(null, {
-          invoiceId: httpResponse.headers.szlahu_szamlaszam,
-          netTotal: httpResponse.headers.szlahu_nettovegosszeg,
-          grossTotal: httpResponse.headers.szlahu_bruttovegosszeg,
-          pdf: pdf
-        })
-      },
-      cb)
+      return data
+    } catch (e) {
+      throw e
+    }
   }
 
-  issueInvoice (invoice, cb) {
-    this._sendRequest(
-      'action-xmlagentxmlfile',
-      this._generateInvoiceXML(invoice),
-      null,
-      (httpResponse, cb) => {
-        cb(null, {
-          invoiceId: httpResponse.headers.szlahu_szamlaszam,
-          netTotal: httpResponse.headers.szlahu_nettovegosszeg,
-          grossTotal: httpResponse.headers.szlahu_bruttovegosszeg
-        });
-      },
-      cb)
+  async issueInvoice (invoice) {
+    try {
+      const httpResponse = await this._sendRequest(
+        'action-xmlagentxmlfile',
+        this._generateInvoiceXML(invoice),
+        this._options.requestInvoiceDownload && this._options.responseVersion === 1
+      )
+
+      const data = {
+        invoiceId: httpResponse.headers.szlahu_szamlaszam,
+        netTotal: httpResponse.headers.szlahu_nettovegosszeg,
+        grossTotal: httpResponse.headers.szlahu_bruttovegosszeg,
+      }
+
+      if (this._options.requestInvoiceDownload) {
+        if (this._options.responseVersion === 1) {
+          data.pdf = new Buffer(httpResponse.data)
+        } else if (this._options.responseVersion === 2) {
+          const parsed = await XMLUtils.xml2obj(httpResponse.data, { 'xmlszamlavalasz.pdf': 'pdf' })
+          data.pdf = new Buffer(parsed.pdf, 'base64')
+        }
+      }
+      return data
+    } catch (e) {
+      throw e
+    }
   }
 
   setRequestInvoiceDownload (value) {
@@ -160,61 +151,87 @@ class Client {
       xmlFooter
   }
 
-  _sendRequest (fileFieldName, data, encoding, getResult, cb) {
-    const formData = {}
+  _generateReverseInvoiceXML(options) {
+    return '<?xml version="1.0" encoding="UTF-8"?>\n\
+      <xmlszamlast xmlns="http://www.szamlazz.hu/xmlszamlast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlast https://www.szamlazz.hu/szamla/docs/xsds/agentst/xmlszamlast.xsd">\n' +
+      XMLUtils.wrapWithElement(
+        'beallitasok', [
+          ...this._getAuthFields(),
+          ['eszamla', String(options.eInvoice)],
+          ['szamlaLetoltes', String(options.requestInvoiceDownload)],
+        ]) +
+      XMLUtils.wrapWithElement(
+        'fejlec', [
+          ['szamlaszam', options.invoiceId],
+          ['keltDatum', new Date()],
+        ]) +
+      '</xmlszamlast>'
+  }
 
-    formData[ fileFieldName ] = {
-      value: data,
-      options: {
-        filename: 'request.xml',
-        contentType: 'text/xml'
+  _generateInvoiceDataXML(options) {
+    return '<?xml version="1.0" encoding="UTF-8"?>\n\
+      <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml http://www.szamlazz.hu/docs/xsds/agentpdf/xmlszamlaxml.xsd">\n' +
+      XMLUtils.wrapWithElement([
+        ...this._getAuthFields(),
+        ['szamlaszam', options.invoiceId],
+        ['rendelesSzam', options.orderNumber],
+        ['pdf', options.pdf]
+      ]) +
+      '</xmlszamlaxml>'
+  }
+
+  async _sendRequest (fileFieldName, data, isBinaryDownload) {
+    const formData = new FormData()
+    formData.append(fileFieldName, data, 'request.xml')
+
+    try {
+      const axiosOptions = {
+        headers: {
+          ...formData.getHeaders()
+        },
+        jar: this._cookieJar,
       }
-    }
 
-    request({
-      formData,
-      method: 'POST',
-      url: szamlazzURL,
-      jar: this._cookieJar,
-      encoding,
-    }, (err, httpResponse, body) => {
-      if (err) {
-        return cb(err, body, httpResponse)
+      if (isBinaryDownload) {
+        axiosOptions.responseType = 'arraybuffer'
+        axiosOptions.reponseEncoding = 'binary'
       }
 
-      if (httpResponse.statusCode !== 200) {
-        return cb(new Error(`${httpResponse.statusCode} ${httpResponse.statusMessage}`), body, httpResponse)
+      const httpResponse = await axios.post(szamlazzURL, formData.getBuffer(), axiosOptions)
+      if (httpResponse.status !== 200) {
+        throw new Error(`${httpResponse.status} ${httpResponse.statusText}`)
       }
 
       if (httpResponse.headers.szlahu_error_code) {
-        err = new Error(decodeURIComponent(httpResponse.headers.szlahu_error.replace(/\+/g, ' ')))
+        const err = new Error(decodeURIComponent(httpResponse.headers.szlahu_error.replace(/\+/g, ' ')))
         err.code = httpResponse.headers.szlahu_error_code
-        return cb(err, body, httpResponse)
+        throw err
       }
 
-      getResult(httpResponse, (err2, result) => {
-        if (err2) {
-          return cb(err, body, httpResponse)
-        }
+      if (isBinaryDownload) {
+          return httpResponse
+      }
 
-        if (this._options.requestInvoiceDownload) {
-          if (this._options.responseVersion === 2) {
-            XMLUtils.xml2obj(body, { 'xmlszamlavalasz.pdf': 'pdf' }, (err3, parsed) => {
-              if (err3) {
-                return cb(err3, body, httpResponse)
-              }
-              result.pdf = new Buffer(parsed.pdf, 'base64')
-              cb(null, result, httpResponse)
-            })
-          } else {
-            result.pdf = body
-            cb(null, result, httpResponse)
-          }
-        } else {
-          cb(null, result, httpResponse)
-        }
-      })
-    })
+      let parsedBody
+      try {
+        parsedBody = await XMLUtils.parseString(httpResponse.data)
+      } catch (e) {
+        throw new Error(e.message)
+      }
+
+      if (
+        parsedBody.xmlszamlavalasz &&
+        parsedBody.xmlszamlavalasz.hibakod
+      ) {
+        const error = new Error(parsedBody.xmlszamlavalasz.hibauzenet)
+        error.code = parsedBody.xmlszamlavalasz.hibakod[0]
+        throw error
+      }
+
+      return httpResponse
+    } catch (e) {
+      throw e
+    }
   }
 }
 
