@@ -95,10 +95,10 @@ class Client {
 
     if (this._options.requestInvoiceDownload) {
       if (this._options.responseVersion === 1) {
-        data.pdf = new Buffer(httpResponse.data)
+        data.pdf = Buffer.from(httpResponse.data)
       } else if (this._options.responseVersion === 2) {
         const parsed = await XMLUtils.xml2obj(httpResponse.data, { 'xmlszamlavalasz.pdf': 'pdf' })
-        data.pdf = new Buffer(parsed.pdf, 'base64')
+        data.pdf = Buffer.from(parsed.pdf, 'base64')
       }
     }
     return data
