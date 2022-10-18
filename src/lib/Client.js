@@ -43,7 +43,7 @@ class Client {
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
       <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml http://www.szamlazz.hu/docs/xsds/agentpdf/xmlszamlaxml.xsd">\n` +
+        xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml https://www.szamlazz.hu/szamla/docs/xsds/agentxml/xmlszamlaxml.xsd">\n` +
       XMLUtils.wrapWithElement([
         ...this._getAuthFields(),
         ['szamlaszam', options.invoiceId],
@@ -95,7 +95,7 @@ class Client {
   async issueInvoice (invoice) {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
     <xmlszamla xmlns="http://www.szamlazz.hu/xmlszamla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.szamlazz.hu/xmlszamla xmlszamla.xsd">\n` +
+    xsi:schemaLocation="http://www.szamlazz.hu/xmlszamla https://www.szamlazz.hu/szamla/docs/xsds/agent/xmlszamla.xsd">\n` +
       XMLUtils.wrapWithElement('beallitasok', [
         ...this._getAuthFields(),
         [ 'eszamla', this._options.eInvoice ],
