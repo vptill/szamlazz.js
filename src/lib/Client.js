@@ -100,8 +100,7 @@ class Client {
       invoice._generateXML(1) +
       '</xmlszamla>'
 
-    const isBinaryDownload = this._options.requestInvoiceDownload && this._options.responseVersion === 1
-    const httpResponse = await this._sendRequest('action-xmlagentxmlfile', xml, isBinaryDownload)
+    const httpResponse = await this._sendRequest('action-xmlagentxmlfile', xml, this._options.responseVersion === 1)
 
     const data = {
       invoiceId: httpResponse.headers.szlahu_szamlaszam,
