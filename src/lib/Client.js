@@ -48,9 +48,19 @@ class Client {
     const hasOrderNumber = typeof options.orderNumber === 'string' && options.orderNumber.trim().length > 1
     assert(hasInvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
 
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n\
+      <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml http://www.szamlazz.hu/docs/xsds/agentpdf/xmlszamlaxml.xsd">\n' +
+      XMLUtils.wrapWithElement([
+        ...this._getAuthFields(),
+        ['szamlaszam', options.invoiceId],
+        ['rendelesSzam', options.orderNumber],
+        ['pdf', options.pdf]
+      ]) +
+      '</xmlszamlaxml>'
+
     const parsedBody = await this._sendRequest(
       'action-szamla_agent_xml',
-      this._generateInvoiceDataXML(options)
+      xml
     )
 
     return parsedBody.szamla
@@ -153,18 +163,6 @@ class Client {
           ['keltDatum', new Date()],
         ]) +
       '</xmlszamlast>'
-  }
-
-  _generateInvoiceDataXML(options) {
-    return '<?xml version="1.0" encoding="UTF-8"?>\n\
-      <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml http://www.szamlazz.hu/docs/xsds/agentpdf/xmlszamlaxml.xsd">\n' +
-      XMLUtils.wrapWithElement([
-        ...this._getAuthFields(),
-        ['szamlaszam', options.invoiceId],
-        ['rendelesSzam', options.orderNumber],
-        ['pdf', options.pdf]
-      ]) +
-      '</xmlszamlaxml>'
   }
 
   async _sendRequest (fileFieldName, data, isBinaryDownload) {
