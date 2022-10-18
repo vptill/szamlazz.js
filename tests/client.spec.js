@@ -65,19 +65,6 @@ describe('Client', () => {
     })
   })
 
-  describe('_generateInvoiceXML', () => {
-    it('should return valid XML', done => {
-      fs.readFile(path.join(__dirname, 'resources', 'xmlszamla.xsd'), (err, data) => {
-        if (!err) {
-          let xsd = xmljs.parseXmlString(data)
-          let xml = xmljs.parseXmlString(client._generateInvoiceXML(invoice))
-          expect(xml.validate(xsd)).to.be.true
-          done()
-        }
-      })
-    })
-  })
-
   describe('issueInvoice', () => {
     describe('HTTP status', () => {
       it('should handle failed requests', async () => {
@@ -257,16 +244,4 @@ describe('Client with auth token', () => {
     })
   })
 
-  describe('_generateInvoiceXML', () => {
-    it('should return valid XML', done => {
-      fs.readFile(path.join(__dirname, 'resources', 'xmlszamla.xsd'), (err, data) => {
-        if (!err) {
-          let xsd = xmljs.parseXmlString(data)
-          let xml = xmljs.parseXmlString(tokenClient._generateInvoiceXML(invoice))
-          expect(xml.validate(xsd)).to.be.true
-          done()
-        }
-      })
-    })
-  })
 })

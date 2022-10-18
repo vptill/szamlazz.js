@@ -106,9 +106,20 @@ class Client {
   }
 
   async issueInvoice (invoice) {
+    const xml = xmlHeader +
+      XMLUtils.wrapWithElement('beallitasok', [
+        ...this._getAuthFields(),
+        [ 'eszamla', this._options.eInvoice ],
+        [ 'szamlaLetoltes', this._options.requestInvoiceDownload ],
+        [ 'szamlaLetoltesPld', this._options.downloadedInvoiceCount ],
+        [ 'valaszVerzio', this._options.responseVersion ]
+      ], 1) +
+      invoice._generateXML(1) +
+      xmlFooter
+
     const httpResponse = await this._sendRequest(
       'action-xmlagentxmlfile',
-      this._generateInvoiceXML(invoice),
+      xml,
       this._options.requestInvoiceDownload && this._options.responseVersion === 1
     )
 
@@ -148,19 +159,6 @@ class Client {
     }
 
     return authFields
-  }
-
-  _generateInvoiceXML (invoice) {
-    return xmlHeader +
-      XMLUtils.wrapWithElement('beallitasok', [
-        ...this._getAuthFields(),
-        [ 'eszamla', this._options.eInvoice ],
-        [ 'szamlaLetoltes', this._options.requestInvoiceDownload ],
-        [ 'szamlaLetoltesPld', this._options.downloadedInvoiceCount ],
-        [ 'valaszVerzio', this._options.responseVersion ]
-      ], 1) +
-      invoice._generateXML(1) +
-      xmlFooter
   }
 
   async _sendRequest (fileFieldName, data, isBinaryDownload) {
