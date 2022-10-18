@@ -10,8 +10,6 @@ const tough = require('tough-cookie')
 
 axiosCookieJarSupport(axios)
 
-const szamlazzURL = 'https://www.szamlazz.hu/szamla/'
-
 const defaultOptions = {
   eInvoice: false,
   requestInvoiceDownload: false,
@@ -152,7 +150,7 @@ class Client {
       axiosOptions.reponseEncoding = 'binary'
     }
 
-    const httpResponse = await axios.post(szamlazzURL, formData.getBuffer(), axiosOptions)
+    const httpResponse = await axios.post('https://www.szamlazz.hu/szamla/', formData.getBuffer(), axiosOptions)
     if (httpResponse.status !== 200) {
       throw new Error(`${httpResponse.status} ${httpResponse.statusText}`)
     }
