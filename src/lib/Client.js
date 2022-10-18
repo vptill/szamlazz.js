@@ -119,17 +119,17 @@ class Client {
   }
 
   _getAuthFields () {
-    let authFields = []
+    let authFields
 
     if (this.useToken) {
-      authFields = authFields.concat([
+      authFields = [
         [ 'szamlaagentkulcs', this._options.authToken ],
-      ])
+      ]
     } else {
-      authFields = authFields.concat([
+      authFields = [
         [ 'felhasznalo', this._options.user ],
         [ 'jelszo', this._options.password ],
-      ])
+      ]
     }
 
     return authFields
