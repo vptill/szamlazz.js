@@ -10,13 +10,6 @@ const tough = require('tough-cookie')
 
 axiosCookieJarSupport(axios)
 
-const xmlHeader =
-  '<?xml version="1.0" encoding="UTF-8"?>\n' +
-  '<xmlszamla xmlns="http://www.szamlazz.hu/xmlszamla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-  'xsi:schemaLocation="http://www.szamlazz.hu/xmlszamla xmlszamla.xsd">\n'
-
-const xmlFooter = '</xmlszamla>'
-
 const szamlazzURL = 'https://www.szamlazz.hu/szamla/'
 
 const defaultOptions = {
@@ -48,8 +41,9 @@ class Client {
     const hasOrderNumber = typeof options.orderNumber === 'string' && options.orderNumber.trim().length > 1
     assert(hasInvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
 
-    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n\
-      <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml http://www.szamlazz.hu/docs/xsds/agentpdf/xmlszamlaxml.xsd">\n' +
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml http://www.szamlazz.hu/docs/xsds/agentpdf/xmlszamlaxml.xsd">\n` +
       XMLUtils.wrapWithElement([
         ...this._getAuthFields(),
         ['szamlaszam', options.invoiceId],
@@ -71,8 +65,9 @@ class Client {
     assert(options.eInvoice !== undefined, 'eInvoice must be specified')
     assert(options.requestInvoiceDownload !== undefined, 'requestInvoiceDownload must be specified')
 
-    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n\
-      <xmlszamlast xmlns="http://www.szamlazz.hu/xmlszamlast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlast https://www.szamlazz.hu/szamla/docs/xsds/agentst/xmlszamlast.xsd">\n' +
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <xmlszamlast xmlns="http://www.szamlazz.hu/xmlszamlast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlast https://www.szamlazz.hu/szamla/docs/xsds/agentst/xmlszamlast.xsd">\n` +
       XMLUtils.wrapWithElement(
         'beallitasok', [
           ...this._getAuthFields(),
@@ -106,7 +101,9 @@ class Client {
   }
 
   async issueInvoice (invoice) {
-    const xml = xmlHeader +
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    <xmlszamla xmlns="http://www.szamlazz.hu/xmlszamla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.szamlazz.hu/xmlszamla xmlszamla.xsd">\n` +
       XMLUtils.wrapWithElement('beallitasok', [
         ...this._getAuthFields(),
         [ 'eszamla', this._options.eInvoice ],
@@ -115,7 +112,7 @@ class Client {
         [ 'valaszVerzio', this._options.responseVersion ]
       ], 1) +
       invoice._generateXML(1) +
-      xmlFooter
+      '</xmlszamla>'
 
     const httpResponse = await this._sendRequest(
       'action-xmlagentxmlfile',
