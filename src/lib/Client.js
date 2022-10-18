@@ -41,9 +41,7 @@ class Client {
     const hasOrderNumber = typeof options.orderNumber === 'string' && options.orderNumber.trim().length > 1
     assert(hasInvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-      <xmlszamlaxml xmlns="http://www.szamlazz.hu/xmlszamlaxml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlaxml https://www.szamlazz.hu/szamla/docs/xsds/agentxml/xmlszamlaxml.xsd">\n` +
+    const xml = this._getXmlHeader('xmlszamlaxml', 'agentxml') +
       XMLUtils.wrapWithElement([
         ...this._getAuthFields(),
         ['szamlaszam', options.invoiceId],
@@ -61,9 +59,7 @@ class Client {
     assert(options.eInvoice !== undefined, 'eInvoice must be specified')
     assert(options.requestInvoiceDownload !== undefined, 'requestInvoiceDownload must be specified')
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-      <xmlszamlast xmlns="http://www.szamlazz.hu/xmlszamlast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlast https://www.szamlazz.hu/szamla/docs/xsds/agentst/xmlszamlast.xsd">\n` +
+    const xml = this._getXmlHeader('xmlszamlast', 'agentst') +
       XMLUtils.wrapWithElement(
         'beallitasok', [
           ...this._getAuthFields(),
@@ -93,9 +89,7 @@ class Client {
   }
 
   async issueInvoice (invoice) {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-    <xmlszamla xmlns="http://www.szamlazz.hu/xmlszamla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.szamlazz.hu/xmlszamla https://www.szamlazz.hu/szamla/docs/xsds/agent/xmlszamla.xsd">\n` +
+    const xml = this._getXmlHeader('xmlszamla', 'agent') +
       XMLUtils.wrapWithElement('beallitasok', [
         ...this._getAuthFields(),
         [ 'eszamla', this._options.eInvoice ],
@@ -124,6 +118,12 @@ class Client {
       }
     }
     return data
+  }
+
+  _getXmlHeader (tag, dir) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+    <${tag} xmlns="http://www.szamlazz.hu/${tag}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.szamlazz.hu/${tag} https://www.szamlazz.hu/szamla/docs/xsds/${dir}/${tag}.xsd">\n`
   }
 
   _getAuthFields () {
