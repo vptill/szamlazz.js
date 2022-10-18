@@ -127,20 +127,14 @@ class Client {
   }
 
   _getAuthFields () {
-    let authFields
-
-    if (this.useToken) {
-      authFields = [
-        [ 'szamlaagentkulcs', this._options.authToken ],
-      ]
-    } else {
-      authFields = [
-        [ 'felhasznalo', this._options.user ],
-        [ 'jelszo', this._options.password ],
-      ]
-    }
-
-    return authFields
+    const tokenAuthFields = [
+      [ 'szamlaagentkulcs', this._options.authToken ],
+    ]
+    const userAuthFields = [
+      [ 'felhasznalo', this._options.user ],
+      [ 'jelszo', this._options.password ],
+    ]
+    return this.useToken ? tokenAuthFields : userAuthFields
   }
 
   async _sendRequest (fileFieldName, data, isBinaryDownload) {
