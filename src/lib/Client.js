@@ -71,9 +71,24 @@ class Client {
     assert(options.eInvoice !== undefined, 'eInvoice must be specified')
     assert(options.requestInvoiceDownload !== undefined, 'requestInvoiceDownload must be specified')
 
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n\
+      <xmlszamlast xmlns="http://www.szamlazz.hu/xmlszamlast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlast https://www.szamlazz.hu/szamla/docs/xsds/agentst/xmlszamlast.xsd">\n' +
+      XMLUtils.wrapWithElement(
+        'beallitasok', [
+          ...this._getAuthFields(),
+          ['eszamla', String(options.eInvoice)],
+          ['szamlaLetoltes', String(options.requestInvoiceDownload)],
+        ]) +
+      XMLUtils.wrapWithElement(
+        'fejlec', [
+          ['szamlaszam', options.invoiceId],
+          ['keltDatum', new Date()],
+        ]) +
+      '</xmlszamlast>'
+
     const httpResponse = await this._sendRequest(
       'action-szamla_agent_st',
-      this._generateReverseInvoiceXML(options),
+      xml,
       true
     )
 
@@ -146,23 +161,6 @@ class Client {
       ], 1) +
       invoice._generateXML(1) +
       xmlFooter
-  }
-
-  _generateReverseInvoiceXML(options) {
-    return '<?xml version="1.0" encoding="UTF-8"?>\n\
-      <xmlszamlast xmlns="http://www.szamlazz.hu/xmlszamlast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlszamlast https://www.szamlazz.hu/szamla/docs/xsds/agentst/xmlszamlast.xsd">\n' +
-      XMLUtils.wrapWithElement(
-        'beallitasok', [
-          ...this._getAuthFields(),
-          ['eszamla', String(options.eInvoice)],
-          ['szamlaLetoltes', String(options.requestInvoiceDownload)],
-        ]) +
-      XMLUtils.wrapWithElement(
-        'fejlec', [
-          ['szamlaszam', options.invoiceId],
-          ['keltDatum', new Date()],
-        ]) +
-      '</xmlszamlast>'
   }
 
   async _sendRequest (fileFieldName, data, isBinaryDownload) {
