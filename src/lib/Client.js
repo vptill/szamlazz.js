@@ -52,11 +52,7 @@ class Client {
       ]) +
       '</xmlszamlaxml>'
 
-    const parsedBody = await this._sendRequest(
-      'action-szamla_agent_xml',
-      xml
-    )
-
+    const parsedBody = await this._sendRequest('action-szamla_agent_xml', xml)
     return parsedBody.szamla
   }
 
@@ -81,11 +77,7 @@ class Client {
         ]) +
       '</xmlszamlast>'
 
-    const httpResponse = await this._sendRequest(
-      'action-szamla_agent_st',
-      xml,
-      true
-    )
+    const httpResponse = await this._sendRequest('action-szamla_agent_st', xml, true)
 
     const data = {
       invoiceId: httpResponse.headers.szlahu_szamlaszam,
@@ -114,11 +106,8 @@ class Client {
       invoice._generateXML(1) +
       '</xmlszamla>'
 
-    const httpResponse = await this._sendRequest(
-      'action-xmlagentxmlfile',
-      xml,
-      this._options.requestInvoiceDownload && this._options.responseVersion === 1
-    )
+    const isBinaryDownload = this._options.requestInvoiceDownload && this._options.responseVersion === 1
+    const httpResponse = await this._sendRequest('action-xmlagentxmlfile', xml, isBinaryDownload)
 
     const data = {
       invoiceId: httpResponse.headers.szlahu_szamlaszam,
