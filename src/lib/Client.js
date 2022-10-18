@@ -126,10 +126,6 @@ class Client {
     return data
   }
 
-  setRequestInvoiceDownload (value) {
-    this._options.requestInvoiceDownload = value
-  }
-
   _getAuthFields () {
     let authFields
 
@@ -187,6 +183,10 @@ class Client {
     }
 
     return httpResponse
+  }
+
+  setRequestInvoiceDownload (value) {
+    this._options.requestInvoiceDownload = value
   }
 }
 
