@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is loosely based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [5.1.0] - 2022-10-20
+
+- Make issueInvoice() work when requestInvoiceDownload:false and responseVersion:1
+- Remove Client.passphrase (kulcstartojelszo) as it has been deprecated.
+
 ## [5.0.0] - 2022-10-05
 
 - Migrate the callback-based API to async/await.
