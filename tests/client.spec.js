@@ -3,7 +3,6 @@
 
 const fs = require('fs')
 const path = require('path')
-const xmljs = require('libxmljs2')
 const axios = require('axios')
 const sinon = require('sinon')
 const chai = require('chai')
