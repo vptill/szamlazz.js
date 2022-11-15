@@ -1,16 +1,22 @@
 /* eslint-env mocha */
 'use strict'
 
-const fs = require('fs')
-const path = require('path')
-const axios = require('axios')
-const sinon = require('sinon')
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
+import fs from 'fs'
+import path from 'path'
+import axios from 'axios'
+import sinon from 'sinon'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 const expect = chai.expect
 chai.use(chaiAsPromised)
 
-const setup = require('./resources/setup')
+import {Buyer, Client, Invoice, Item, Seller} from '../index.js'
+import {createClient, createTokenClient, createSeller, createBuyer, createSoldItemNet, createSoldItemGross, createInvoice} from './resources/setup.js'
+
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let axiosStub
 
@@ -22,18 +28,16 @@ let soldItem1
 let soldItem2
 let invoice
 
-let Szamlazz
 
 beforeEach(done => {
   axiosStub = sinon.stub(axios, 'post')
-  Szamlazz = require('..')
-  client = setup.createClient(Szamlazz)
-  tokenClient = setup.createTokenClient(Szamlazz)
-  seller = setup.createSeller(Szamlazz)
-  buyer = setup.createBuyer(Szamlazz)
-  soldItem1 = setup.createSoldItemNet(Szamlazz)
-  soldItem2 = setup.createSoldItemGross(Szamlazz)
-  invoice = setup.createInvoice(Szamlazz, seller, buyer, [soldItem1, soldItem2])
+  client = createClient(Client)
+  tokenClient = createTokenClient(Client)
+  seller = createSeller(Seller)
+  buyer = createBuyer(Buyer)
+  soldItem1 = createSoldItemNet(Item)
+  soldItem2 = createSoldItemGross(Item)
+  invoice = createInvoice(Invoice, seller, buyer, [soldItem1, soldItem2])
 
   done()
 })

@@ -1,11 +1,13 @@
 /* eslint-env mocha */
 'use strict'
 
-const xml2js = require('xml2js')
+import xml2js from 'xml2js'
 const parser = new xml2js.Parser()
-const expect = require('chai').expect
+import chai from 'chai'
+const expect = chai.expect
 
-const setup = require('./resources/setup')
+import {Buyer, Invoice, Item, Seller} from '../index.js'
+import {createSeller, createBuyer, createSoldItemNet, createSoldItemGross, createInvoice} from './resources/setup.js'
 
 let seller
 let buyer
@@ -13,16 +15,13 @@ let soldItem1
 let soldItem2
 let invoice
 
-let Szamlazz
 
 beforeEach(function (done) {
-  Szamlazz = require('..')
-
-  seller = setup.createSeller(Szamlazz)
-  buyer = setup.createBuyer(Szamlazz)
-  soldItem1 = setup.createSoldItemNet(Szamlazz)
-  soldItem2 = setup.createSoldItemGross(Szamlazz)
-  invoice = setup.createInvoice(Szamlazz, seller, buyer, [ soldItem1, soldItem2 ])
+  seller = createSeller(Seller)
+  buyer = createBuyer(Buyer)
+  soldItem1 = createSoldItemNet(Item)
+  soldItem2 = createSoldItemGross(Item)
+  invoice = createInvoice(Invoice, seller, buyer, [ soldItem1, soldItem2 ])
 
   done()
 })

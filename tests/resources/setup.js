@@ -1,9 +1,11 @@
+import {Currency, Language, PaymentMethod, TaxSubjects} from "../../lib/Constants.js"
+
 /**
  * Create client
  * @return {Client}
  */
-exports.createClient = function (Szamlazz) {
-  return new Szamlazz.Client({
+export function createClient(Client) {
+  return new Client({
     user: 'USERNAME',
     password: 'PASSWORD',
     eInvoice: false,
@@ -13,8 +15,8 @@ exports.createClient = function (Szamlazz) {
   })
 }
 
-exports.createTokenClient = function (Szamlazz) {
-  return new Szamlazz.Client({
+export function createTokenClient(Client) {
+  return new Client({
     authToken: 'AUTHTOKEN',
     eInvoice: false,
     requestInvoiceDownload: true,
@@ -27,8 +29,8 @@ exports.createTokenClient = function (Szamlazz) {
  * Optional and can be used to override the default data.
  * @return {Seller}
  */
-exports.createSeller = function (Szamlazz) {
-  return new Szamlazz.Seller({
+export function createSeller(Seller) {
+  return new Seller({
     bank: {
       name: 'Test Bank <name>',
       accountNumber: '11111111-11111111-11111111'
@@ -47,8 +49,8 @@ exports.createSeller = function (Szamlazz) {
  * Required, you should supply basic data: name, zip, city, address as a minimum. Hungary is the default country.
  * @return {Buyer}
  */
-exports.createBuyer = function (Szamlazz) {
-  return new Szamlazz.Buyer({
+export function createBuyer(Buyer) {
+  return new Buyer({
     name: 'Test ' + Math.random(),
     country: '',
     zip: '1234',
@@ -61,7 +63,7 @@ exports.createBuyer = function (Szamlazz) {
       city: 'City',
       address: 'Some street address'
     },
-    taxSubject: Szamlazz.TaxSubject.Unknown,
+    taxSubject: TaxSubjects.Unknown,
     issuerName: '',
     identifier: 1,
     phone: '',
@@ -73,8 +75,8 @@ exports.createBuyer = function (Szamlazz) {
  * Create sold item with net price
  * @return {Item}
  */
-exports.createSoldItemNet = function (Szamlazz) {
-  return new Szamlazz.Item({
+export function createSoldItemNet(Item) {
+  return new Item({
     label: 'First item',
     quantity: 2,
     unit: 'qt',
@@ -88,8 +90,8 @@ exports.createSoldItemNet = function (Szamlazz) {
  * Create sold item with gross price
  * @return {Item}
  */
-exports.createSoldItemGross = function (Szamlazz) {
-  return new Szamlazz.Item({
+export function createSoldItemGross(Item) {
+  return new Item({
     label: 'Second item',
     quantity: 5,
     unit: 'qt',
@@ -103,11 +105,11 @@ exports.createSoldItemGross = function (Szamlazz) {
  * Buyer and seller can be shared between invoices.
  * @return {Invoice}
  */
-exports.createInvoice = function (Szamlazz, seller, buyer, items) {
-  return new Szamlazz.Invoice({
-    paymentMethod: Szamlazz.PaymentMethod.BankTransfer,
-    currency: Szamlazz.Currency.Ft,
-    language: Szamlazz.Language.Hungarian,
+export function createInvoice(Invoice, seller, buyer, items) {
+  return new Invoice({
+    paymentMethod: PaymentMethod.BankTransfer,
+    currency: Currency.Ft,
+    language: Language.Hungarian,
     seller: seller,
     buyer: buyer,
     items

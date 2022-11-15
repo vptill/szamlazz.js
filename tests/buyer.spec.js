@@ -1,21 +1,18 @@
 /* eslint-env mocha */
 'use strict'
 
-const xml2js = require('xml2js')
+import xml2js from 'xml2js'
 const parser = new xml2js.Parser()
-const expect = require('chai').expect
+import chai from 'chai'
+const expect = chai.expect
 
-const setup = require('./resources/setup')
+import {Buyer} from '../index.js'
+import {createBuyer} from './resources/setup.js'
 
 let buyer
 
-let Szamlazz
-
 beforeEach(function (done) {
-  Szamlazz = require('..')
-
-  buyer = setup.createBuyer(Szamlazz)
-
+  buyer = createBuyer(Buyer)
   done()
 })
 
