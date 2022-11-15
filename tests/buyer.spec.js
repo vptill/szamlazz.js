@@ -1,5 +1,4 @@
 /* eslint-env mocha */
-'use strict'
 
 import xml2js from 'xml2js'
 const parser = new xml2js.Parser()

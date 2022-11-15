@@ -1,5 +1,3 @@
-'use strict'
-
 import {Buyer} from './lib/Buyer.js'
 import {Client} from './lib/Client.js'
 import {Currencies, Languages, PaymentMethods, TaxSubjects} from './lib/Constants.js'
