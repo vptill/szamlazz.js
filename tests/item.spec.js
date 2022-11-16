@@ -14,7 +14,6 @@ let soldItem1
 let soldItem2
 let invoice
 
-
 beforeEach(function (done) {
   seller = createSeller(Seller)
   buyer = createBuyer(Buyer)

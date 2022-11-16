@@ -14,7 +14,6 @@ import {createClient, createTokenClient, createSeller, createBuyer, createSoldIt
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let axiosStub
@@ -26,7 +25,6 @@ let buyer
 let soldItem1
 let soldItem2
 let invoice
-
 
 beforeEach(done => {
   axiosStub = sinon.stub(axios, 'post')
