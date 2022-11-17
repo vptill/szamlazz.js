@@ -11,13 +11,26 @@ npm install szamlazz.js --save
 ## Usage
 
 ```javascript
-const szamlazz = require('szamlazz.js')
+import {
+  Buyer,
+  Client,
+  Invoice,
+  Item,
+  Seller,
+  Currencies,
+  Currency,
+  Language,
+  Languages,
+  PaymentMethod,
+  PaymentMethods,
+  TaxSubject,
+  TaxSubjects} from 'szamlazz.js'
 ```
 
 ### Create a client
 
 ```javascript
-const szamlazzClient = new szamlazz.Client({
+const szamlazzClient = new Client({
   user: 'USERNAME',
   password: 'PASSWORD',
   eInvoice: false, // create e-invoice. optional, default: false
@@ -30,7 +43,7 @@ const szamlazzClient = new szamlazz.Client({
 Or use "Számla Agent" key to authenticate the client
 
 ```javascript
-const szamlazzClient = new szamlazz.Client({
+const szamlazzClient = new Client({
   authToken: 'SZAMLAAGENTKEY',
   eInvoice: false, // create e-invoice. optional, default: false
   requestInvoiceDownload: true, // downloads the issued pdf invoice. optional, default: false
@@ -44,7 +57,7 @@ You can reuse this client to issue invoices.
 ### Create a seller
 
 ```javascript
-let seller = new szamlazz.Seller({ // everyting is optional
+let seller = new Seller({ // everyting is optional
   bank: {
     name: 'Test Bank <name>',
     accountNumber: '11111111-11111111-11111111'
@@ -62,7 +75,7 @@ let seller = new szamlazz.Seller({ // everyting is optional
 ### Create a buyer
 
 ```javascript
-let buyer = new szamlazz.Buyer({
+let buyer = new Buyer({
   name: 'Some Buyer Name ' + Math.random(),
   country: '',
   zip: '1234',
@@ -86,7 +99,7 @@ let buyer = new szamlazz.Buyer({
 
 With net unit price:
 ```javascript
-let soldItem1 = new szamlazz.Item({
+let soldItem1 = new Item({
   label: 'First item',
   quantity: 2,
   unit: 'qt',
@@ -99,7 +112,7 @@ let soldItem1 = new szamlazz.Item({
 With gross unit price:
 
 ```javascript
-let soldItem2 = new szamlazz.Item({
+let soldItem2 = new Item({
   label: 'Second item',
   quantity: 5,
   unit: 'qt',
@@ -113,10 +126,10 @@ let soldItem2 = new szamlazz.Item({
 You can create an invoice with the instances created above:
 
 ```javascript
-let invoice = new szamlazz.Invoice({
-  paymentMethod: szamlazz.PaymentMethod.BankTransfer, // optional, default: BankTransfer
-  currency: szamlazz.Currency.Ft, // optional, default: Ft
-  language: szamlazz.Language.Hungarian, // optional, default: Hungarian
+let invoice = new Invoice({
+  paymentMethod: PaymentMethods.BankTransfer, // optional, default: BankTransfer
+  currency: Currencies.Ft, // optional, default: Ft
+  language: Languages.Hungarian, // optional, default: Hungarian
   seller: seller, // the seller, required
   buyer: buyer, // the buyer, required
   items: [ soldItem1, soldItem2 ], // the sold items, required
@@ -138,7 +151,7 @@ if (result.pdf) {
 You can get the data of a previously issued invoice:
 
 ```javascript
-const szamlazzClient = new szamlazz.Client({
+const szamlazzClient = new Client({
   user: 'USERNAME',
   password: 'PASSWORD'
 })
@@ -157,7 +170,7 @@ Either the invoice number or the order number must be specified.
 You can reverse a previously issued invoice:
 
 ```javascript
-const szamlazzClient = new szamlazz.Client({
+const szamlazzClient = new Client({
   user: 'USERNAME',
   password: 'PASSWORD'
 })
@@ -186,44 +199,44 @@ Response
 The following payment methods are supported by szamlazz.hu:
 
 ```
-szamlazz.PaymentMethod.Cash
-szamlazz.PaymentMethod.BankTransfer
-szamlazz.PaymentMethod.CreditCard
-szamlazz.PaymentMethod.PayPal
+szamlazz.PaymentMethods.Cash
+szamlazz.PaymentMethods.BankTransfer
+szamlazz.PaymentMethods.CreditCard
+szamlazz.PaymentMethods.PayPal
 ```
 
-### Currency
+### Currencies
 
 The following currencies are recognized by szamlazz.hu:
 
 ```
-szamlazz.Currency.Ft
-szamlazz.Currency.HUF
-szamlazz.Currency.EUR
-szamlazz.Currency.CHF
-szamlazz.Currency.USD
-szamlazz.Currency.AUD
-szamlazz.Currency.AED
-szamlazz.Currency.BGN
-szamlazz.Currency.CAD
-szamlazz.Currency.CNY
-szamlazz.Currency.CZK
-szamlazz.Currency.DKK
-szamlazz.Currency.EEK
-szamlazz.Currency.GBP
-szamlazz.Currency.HRK
-szamlazz.Currency.ISK
-szamlazz.Currency.JPY
-szamlazz.Currency.LTL
-szamlazz.Currency.LVL
-szamlazz.Currency.NOK
-szamlazz.Currency.NZD
-szamlazz.Currency.PLN
-szamlazz.Currency.RON
-szamlazz.Currency.RUB
-szamlazz.Currency.SEK
-szamlazz.Currency.SKK
-szamlazz.Currency.UAH
+szamlazz.Currencies.Ft
+szamlazz.Currencies.HUF
+szamlazz.Currencies.EUR
+szamlazz.Currencies.CHF
+szamlazz.Currencies.USD
+szamlazz.Currencies.AUD
+szamlazz.Currencies.AED
+szamlazz.Currencies.BGN
+szamlazz.Currencies.CAD
+szamlazz.Currencies.CNY
+szamlazz.Currencies.CZK
+szamlazz.Currencies.DKK
+szamlazz.Currencies.EEK
+szamlazz.Currencies.GBP
+szamlazz.Currencies.HRK
+szamlazz.Currencies.ISK
+szamlazz.Currencies.JPY
+szamlazz.Currencies.LTL
+szamlazz.Currencies.LVL
+szamlazz.Currencies.NOK
+szamlazz.Currencies.NZD
+szamlazz.Currencies.PLN
+szamlazz.Currencies.RON
+szamlazz.Currencies.RUB
+szamlazz.Currencies.SEK
+szamlazz.Currencies.SKK
+szamlazz.Currencies.UAH
 ```
 
 ### Language
@@ -231,10 +244,10 @@ szamlazz.Currency.UAH
 The accepted languages are:
 
 ```
-szamlazz.Currency.Hungarian
-szamlazz.Currency.English
-szamlazz.Currency.German
-szamlazz.Currency.Italian
-szamlazz.Currency.Romanian
-szamlazz.Currency.Slovak
+szamlazz.Languages.Hungarian
+szamlazz.Languages.English
+szamlazz.Languages.German
+szamlazz.Languages.Italian
+szamlazz.Languages.Romanian
+szamlazz.Languages.Slovak
 ```
