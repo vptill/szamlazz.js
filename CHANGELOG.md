@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is loosely based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [6.0.0] - 2022-11-17
+
+- Port the codebase from CommonJS to ECMAScript modules.
+- Extend VAT rate support with TEHK, HO and KBAET.
+
 ## [5.1.0] - 2022-10-20
 
 - Make issueInvoice() work when requestInvoiceDownload:false and responseVersion:1
