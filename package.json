@@ -19,6 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "chai": "^3.5.0",
+    "chai-as-promised": "^7.1.1",
     "mocha": "^10.1.0",
     "mockery": "^1.7.0",
     "sinon": "^5.0.0"
@@ -26,11 +27,8 @@
   "dependencies": {
     "axios": "^0.21.1",
     "axios-cookiejar-support": "^1.0.1",
-    "chai-as-promised": "^7.1.1",
     "form-data": "^4.0.0",
-    "libxmljs2": "^0.30.1",
     "merge": "^1.2.0",
-    "request": "^2.73.0",
     "tough-cookie": "^4.0.0",
     "xml2js": "^0.4.16"
   }
