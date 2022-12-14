@@ -17,6 +17,10 @@
   },
   "author": "Elastic Wings Ltd.",
   "license": "MIT",
+  "files": [
+    "index.js",
+    "lib/"
+  ],
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^7.1.1",
