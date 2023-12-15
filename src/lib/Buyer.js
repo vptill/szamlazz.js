@@ -5,8 +5,7 @@ const merge = require('merge')
 const XMLUtils = require('./XMLUtils')
 
 const defaultOptions = {
-  postAddress: {},
-  adoalany: -1
+  postAddress: {}
 }
 
 class Buyer {
@@ -44,7 +43,6 @@ class Buyer {
       [ 'postazasiIrsz', this._options.postAddress.zip ],
       [ 'postazasiTelepules', this._options.postAddress.city ],
       [ 'postazasiCim', this._options.postAddress.address ],
-      [ 'adoalany', this._options.adoalany ],
       // TODO: The following feature hasn't implemented yet
       // ['vevoFokonyv', ],
       [ 'azonosito', this._options.identifier ],
