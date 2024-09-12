@@ -1,11 +1,11 @@
 /* eslint-env mocha */
 
 import nock from 'nock'
-import {expect, use as chaiUse} from 'chai'
+import { expect, use as chaiUse } from 'chai'
 import chaiAsPromised from '@rvagg/chai-as-promised'
 chaiUse(chaiAsPromised)
 
-import {Buyer, Client, Invoice, Item, Seller} from '../index.js'
+import { Buyer, Client, Invoice, Item, Seller } from '../index.js'
 import {
   createClient,
   createTokenClient,
@@ -25,6 +25,7 @@ describe('Client', () => {
   let soldItem1
   let soldItem2
   let invoice
+  let reversalRequest
 
   before(() => {
     nock.disableNetConnect()
@@ -38,6 +39,11 @@ describe('Client', () => {
     soldItem1 = createSoldItemNet(Item)
     soldItem2 = createSoldItemGross(Item)
     invoice = createInvoice(Invoice, seller, buyer, [soldItem1, soldItem2])
+    reversalRequest = {
+      invoiceId: 'E-RNJLO-2019-1234',  
+      eInvoice: true,                  
+      requestInvoiceDownload: false,   
+    }
   })
 
   afterEach(() => {
@@ -95,7 +101,9 @@ describe('Client', () => {
           .replyWithFile(200, RESPONSE_FILE_PATHS.SUCCESS_WITHOUT_PDF, {
             szlahu_bruttovegosszeg: '6605',
             szlahu_nettovegosszeg: '5201',
-            szlahu_szamlaszam: '2016-139'
+            szlahu_szamlaszam: '2016-139',
+            szlahu_vevoifiokurl: 'https://www.szamlazz.hu/szamla/fiok/gd82embu556d2qjagzj3s2ijqeqzds4ckhuf',
+
           })
 
         client.setRequestInvoiceDownload(false)
@@ -106,7 +114,8 @@ describe('Client', () => {
         expect(httpResponse).to.have.all.keys(
           'invoiceId',
           'netTotal',
-          'grossTotal'
+          'grossTotal',
+          'customerAccountUrl'
         )
       })
 
@@ -127,6 +136,13 @@ describe('Client', () => {
 
         expect(parseFloat(httpResponse.grossTotal)).is.a('number')
       })
+
+      it('should have `customerAccountUrl` property', async () => {
+        const httpResponse = await client.issueInvoice(invoice)
+        expect(httpResponse.customerAccountUrl).to.be.equals('https://www.szamlazz.hu/szamla/fiok/gd82embu556d2qjagzj3s2ijqeqzds4ckhuf')
+      })
+
+      
     })
 
     describe('successful invoice generation with download request', () => {
@@ -149,6 +165,7 @@ describe('Client', () => {
           'invoiceId',
           'netTotal',
           'grossTotal',
+          'customerAccountUrl',
           'pdf'
         )
       })
@@ -172,8 +189,78 @@ describe('Client', () => {
         const httpResponse = await client.issueInvoice(invoice)
         expect(httpResponse.pdf).to.be.an.instanceof(Buffer)
       })
+      
+      it('should have `customerAccountUrl` property', async () => {
+        const httpResponse = await client.issueInvoice(invoice)
+        expect(httpResponse).to.have.property('customerAccountUrl').that.is.satisfies((value) => typeof value === 'string' || value === undefined);
+      }) 
     })
   })
+
+  describe('reverseInvoice', () => {
+    describe('HTTP status', () => {
+      it('should handle failed requests', async () => {
+        nock('https://www.szamlazz.hu')
+          .post('/szamla/')
+          .reply(404)
+
+        await expect(client.reverseInvoice(reversalRequest)).rejectedWith('Request failed with status code 404')
+        nock.isDone()
+      })
+    })
+
+    describe('successful invoice reversal without download request', () => {
+      beforeEach(() => {
+        nock('https://www.szamlazz.hu')
+          .post('/szamla/')
+          .replyWithFile(200, RESPONSE_FILE_PATHS.SUCCESS_WITHOUT_PDF, {
+            szlahu_bruttovegosszeg: '6605',
+            szlahu_nettovegosszeg: '5201',
+            szlahu_szamlaszam: '2016-139',
+            szlahu_vevoifiokurl: 'https://www.szamlazz.hu/szamla/fiok/gd82embu556d2qjagzj3s2ijqeqzds4ckhuf',
+          })
+
+        client.setRequestInvoiceDownload(false)
+      })
+
+      it('should have result parameter', async () => {
+        const httpResponse = await client.reverseInvoice(reversalRequest)
+        expect(httpResponse).to.have.all.keys(
+          'invoiceId',
+          'netTotal',
+          'grossTotal',
+          'customerAccountUrl'
+        )
+      })
+
+      it('should have `invoiceId` property', async () => {
+        const httpResponse = await client.reverseInvoice(reversalRequest)
+
+        expect(httpResponse).to.have.property('invoiceId').that.is.a('string')
+      })
+
+      it('should have `netTotal` property', async () => {
+        const httpResponse = await client.reverseInvoice(reversalRequest)
+
+        expect(parseFloat(httpResponse.netTotal)).is.a('number')
+      })
+
+      it('should have `grossTotal` property', async () => {
+        const httpResponse = await client.reverseInvoice(reversalRequest)
+
+        expect(parseFloat(httpResponse.grossTotal)).is.a('number')
+      })
+
+      it('should have `customerAccountUrl` property', async () => {
+        const httpResponse = await client.reverseInvoice(reversalRequest)
+        expect(httpResponse.customerAccountUrl).to.be.equals('https://www.szamlazz.hu/szamla/fiok/gd82embu556d2qjagzj3s2ijqeqzds4ckhuf')
+      })
+
+      
+    })
+
+  })
+
 
   describe('getInvoiceData', () => {
     describe('unsuccessful invoice generation', () => {
